@@ -4,47 +4,37 @@ const { issueNonce, buildSignInMessage, consumeNonce, issueSessionToken } = requ
 
 const router = express.Router();
 
-// Step 1: frontend requests a nonce for the connected wallet address
 router.post("/nonce", (req, res) => {
   const { address } = req.body;
   if (!address || !ethers.isAddress(address)) {
     return res.status(400).json({ error: "Valid wallet address required" });
   }
   const nonce = issueNonce(address);
-  const message = buildSignInMessage(address, nonce);
-  res.json({ message });
+  res.json({ message: buildSignInMessage(address, nonce) });
 });
 
-// Step 2: frontend sends back the signature (from personal_sign / MetaMask)
 router.post("/verify", (req, res) => {
   const { address, signature } = req.body;
   if (!address || !signature) {
     return res.status(400).json({ error: "address and signature are required" });
   }
-
   const nonce = consumeNonce(address);
-  if (!nonce) {
-    return res.status(400).json({ error: "Nonce expired or not found — request a new one" });
-  }
-
-  const expectedMessage = buildSignInMessage(address, nonce);
+  if (!nonce) return res.status(400).json({ error: "Nonce expired or not found — request a new one" });
 
   let recovered;
   try {
-    recovered = ethers.verifyMessage(expectedMessage, signature);
-  } catch (err) {
+    recovered = ethers.verifyMessage(buildSignInMessage(address, nonce), signature);
+  } catch {
     return res.status(400).json({ error: "Malformed signature" });
   }
-
   if (recovered.toLowerCase() !== address.toLowerCase()) {
     return res.status(401).json({ error: "Signature does not match address" });
   }
 
-  // Role assignment: in a real system, look this up in your users table
-  // or the on-chain VERIFIER_ROLE. Defaulting to "beneficiary" here.
-  const role = "beneficiary";
+  const verifierAddresses = (process.env.VERIFIER_ADDRESSES || "")
+    .split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
+  const role = verifierAddresses.includes(address.toLowerCase()) ? "verifier" : "beneficiary";
   const token = issueSessionToken(address, role);
-
   res.json({ token, address, role });
 });
 
