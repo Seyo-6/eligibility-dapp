@@ -1,78 +1,103 @@
-# Eligibility & Disbursement dApp
+# Eligibility dApp — Telangana-inspired certificate prototype
 
-A dApp for verifier-attested eligibility claims and stablecoin disbursement,
-with MetaMask login and an optional KYC webhook integration point.
+A prototype dApp for verifier-attested eligibility claims, with MetaMask login and caste/income certificate application flows inspired by public Telangana certificate workflows.
+
+**This is not an official Government of Telangana or MeeSeva service. Do not upload real Aadhaar numbers or sensitive documents.**
 
 ## Structure
 
-```
-contracts/   Solidity contracts (Hardhat) — EligibilityRegistry, DisbursementContract
-backend/     Node.js/Express API — auth, claims, KYC webhook, event reads
-frontend/    React (Vite) — MetaMask login, beneficiary dashboard, verifier panel
+```text
+contracts/   Solidity / Hardhat — EligibilityRegistry
+backend/     Node.js/Express API — wallet auth, claims, verifier review
+frontend/    React/Vite — MetaMask login and certificate applications
+render.yaml  Render deployment blueprint
 ```
 
-## Run order
+## Local development
 
-### 1. Contracts
+### Contracts
 ```bash
 cd contracts
 npm install
-npx hardhat compile
-npx hardhat test
-
-# terminal A
+npm run compile
+npm test
 npx hardhat node
-
-# terminal B
 npm run deploy:local
 ```
-Copy the three printed contract addresses.
 
-### 2. Backend
+### Backend
 ```bash
 cd backend
 cp .env.example .env
-# paste in the addresses from step 1, and a local hardhat account private key
-# as VERIFIER_PRIVATE_KEY (use one of the addresses `hardhat node` prints)
 npm install
 npm start
 ```
 
-### 3. Frontend
+### Frontend
 ```bash
 cd frontend
 cp .env.example .env
 npm install
 npm run dev
 ```
-Open http://localhost:5173, connect MetaMask (point it at the local Hardhat
-network, chain ID 31337, RPC http://127.0.0.1:8545), and sign in.
 
-## What's real vs. what's a placeholder
+## Sepolia deployment
 
-**Real / production-shaped:**
-- Sign-in-with-wallet flow (nonce + signature verification, no passwords)
-- On-chain contracts store only a category code, status, and document hash —
-  never personal data
-- Role separation (admin / verifier / beneficiary) via OpenZeppelin AccessControl
-- KYC webhook route with signature verification, structured to plug in a
-  real provider (DigiLocker, Onfido, Persona, etc.)
+The repository includes `contracts/scripts/deploy-sepolia.js` and a manual GitHub Actions workflow at `.github/workflows/deploy-sepolia.yml`.
 
-**Placeholders you'll need to replace before going live:**
-- `MockStablecoin.sol` — swap for a real ERC-20/stablecoin address on any real network
-- Nonce store is in-memory (`backend/src/services/auth.js`) — move to Redis/DB
-- No database yet for indexing events or storing KYC session records — the
-  schema is sketched in comments in `backend/src/routes/kyc.js`
-- IPFS upload isn't wired up — `Dashboard.jsx` hashes a placeholder string
-  instead of an actual uploaded file
-- No contract audit — required before any mainnet deployment handling real funds
-- No DPDP Act / data-protection compliance layer — required for a real
-  deployment handling caste or income data in India
+Add these GitHub repository secrets before running the workflow:
 
-## Security notes
+- `SEPOLIA_RPC_URL` — an RPC endpoint from your provider
+- `DEPLOYER_PRIVATE_KEY` — a dedicated Sepolia deployment wallet; never commit this
+- `SEPOLIA_VERIFIER_ADDRESS` — wallet that should receive the verifier role
 
-- The `contracts/` folder blocked its Solidity compiler download in this
-  sandboxed environment (network allowlist) — compile and test it on your
-  own machine or CI, where it will resolve normally.
-- Never commit real private keys. `.env` files are gitignored — only
-  `.env.example` files are checked in.
+Run **Actions → Deploy EligibilityRegistry to Sepolia → Run workflow**. Copy the deployed registry address from the workflow logs.
+
+Then configure the hosted frontend with:
+
+```text
+VITE_ELIGIBILITY_REGISTRY_ADDRESS=<deployed registry address>
+VITE_API_BASE=<backend URL>/api
+```
+
+The hosted wallet flow should use Sepolia test ETH only.
+
+## Render deployment
+
+A `render.yaml` blueprint is included for:
+
+- `eligibility-dapp-api` — Node/Express backend
+- `eligibility-dapp-web` — Vite static frontend
+
+Create a Render Blueprint from this repository. Configure the backend secrets:
+
+```text
+RPC_URL=<Sepolia RPC>
+VERIFIER_PRIVATE_KEY=<dedicated verifier wallet private key>
+VERIFIER_ADDRESSES=<verifier wallet address>
+ELIGIBILITY_REGISTRY_ADDRESS=<deployed registry address>
+FRONTEND_URL=<frontend URL>
+JWT_SECRET=<long random secret>
+```
+
+Configure the frontend variables:
+
+```text
+VITE_API_BASE=https://<backend-service>.onrender.com/api
+VITE_ELIGIBILITY_REGISTRY_ADDRESS=<deployed registry address>
+```
+
+After deployment, users can open the frontend URL, connect MetaMask, sign in, choose **Caste Certificate** or **Income Certificate**, upload a demo supporting file, and submit the document hash through MetaMask.
+
+## Data model
+
+Personal certificate information is intentionally not written to the blockchain. The prototype submits only a document hash and certificate category to the registry. Uploaded files are hashed in the browser; no file storage service is included yet.
+
+## Prototype limitations
+
+- One on-chain claim is currently associated with each wallet in the existing registry contract.
+- Application form fields are UI/demo data and are not persisted to a database yet.
+- No IPFS storage or event indexer is included.
+- Nonces are stored in memory; use Redis/database for production.
+- Verifier access is configured by `VERIFIER_ADDRESSES` for the demo.
+- No smart-contract audit or DPDP compliance layer; do not use this for real government certificate processing or sensitive citizen data.

@@ -1,6 +1,11 @@
-import { BrowserProvider } from "ethers";
+import { BrowserProvider, Contract } from "ethers";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000/api";
+const REGISTRY_ADDRESS = import.meta.env.VITE_ELIGIBILITY_REGISTRY_ADDRESS;
+
+const REGISTRY_ABI = [
+  "function submitClaim(bytes32 documentHash, uint8 category) external"
+];
 
 export async function connectWallet() {
   if (!window.ethereum) {
@@ -13,10 +18,8 @@ export async function connectWallet() {
   return { provider, signer, address };
 }
 
-// Full sign-in flow: get nonce -> sign message -> verify -> store session token
 export async function signInWithWallet() {
   const { signer, address } = await connectWallet();
-
   const nonceRes = await fetch(`${API_BASE}/auth/nonce`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -24,7 +27,6 @@ export async function signInWithWallet() {
   });
   if (!nonceRes.ok) throw new Error("Failed to get sign-in message");
   const { message } = await nonceRes.json();
-
   const signature = await signer.signMessage(message);
 
   const verifyRes = await fetch(`${API_BASE}/auth/verify`, {
@@ -38,8 +40,18 @@ export async function signInWithWallet() {
   localStorage.setItem("session_token", token);
   localStorage.setItem("wallet_address", address);
   localStorage.setItem("role", role);
-
   return { address, role, token };
+}
+
+export async function submitClaimFromWallet(documentHash, category) {
+  if (!REGISTRY_ADDRESS) {
+    throw new Error("Eligibility registry address is not configured.");
+  }
+  const { signer } = await connectWallet();
+  const registry = new Contract(REGISTRY_ADDRESS, REGISTRY_ABI, signer);
+  const tx = await registry.submitClaim(documentHash, category);
+  await tx.wait();
+  return tx.hash;
 }
 
 export function getSession() {
