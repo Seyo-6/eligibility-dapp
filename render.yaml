@@ -1,0 +1,30 @@
+services:
+  - type: web
+    name: eligibility-dapp-api
+    runtime: node
+    rootDir: backend
+    buildCommand: npm ci
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: RPC_URL
+        sync: false
+      - key: VERIFIER_PRIVATE_KEY
+        sync: false
+      - key: ELIGIBILITY_REGISTRY_ADDRESS
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+
+  - type: static_site
+    name: eligibility-dapp-web
+    rootDir: frontend
+    buildCommand: npm ci && npm run build
+    staticPublishPath: dist
+    envVars:
+      - key: VITE_API_BASE
+        sync: false
+      - key: VITE_ELIGIBILITY_REGISTRY_ADDRESS
+        sync: false
