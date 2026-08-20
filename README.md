@@ -93,6 +93,20 @@ After deployment, users can open the frontend URL, connect MetaMask, sign in, ch
 
 Personal certificate information is intentionally not written to the blockchain. The prototype submits only a document hash and certificate category to the registry. Uploaded files are hashed in the browser; no file storage service is included yet.
 
+## Admin panel
+
+An `/admin` page and matching `/api/admin/*` backend routes let an admin
+wallet manage verifiers and pause/unpause claim submissions on the
+registry, without needing to run `hardhat console` manually:
+
+- Add / remove an address's on-chain `VERIFIER_ROLE`
+- Pause / unpause `submitClaim` on the registry (e.g. during an incident)
+
+To use it, add your wallet address to `ADMIN_ADDRESSES` in the backend's
+env, sign in with that wallet, and open `/admin`. Note this only grants the
+on-chain role — to also let that wallet use the Verifier Panel UI, add it to
+`VERIFIER_ADDRESSES` too.
+
 ## Prototype limitations
 
 - One on-chain claim is currently associated with each wallet in the existing registry contract.

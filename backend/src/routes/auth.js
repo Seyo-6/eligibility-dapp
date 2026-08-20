@@ -33,7 +33,15 @@ router.post("/verify", (req, res) => {
 
   const verifierAddresses = (process.env.VERIFIER_ADDRESSES || "")
     .split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
-  const role = verifierAddresses.includes(address.toLowerCase()) ? "verifier" : "beneficiary";
+  const adminAddresses = (process.env.ADMIN_ADDRESSES || "")
+    .split(",").map((v) => v.trim().toLowerCase()).filter(Boolean);
+
+  const lower = address.toLowerCase();
+  const role = adminAddresses.includes(lower)
+    ? "admin"
+    : verifierAddresses.includes(lower)
+      ? "verifier"
+      : "beneficiary";
   const token = issueSessionToken(address, role);
   res.json({ token, address, role });
 });
