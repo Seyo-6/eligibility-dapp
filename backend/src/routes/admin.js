@@ -1,7 +1,7 @@
 const express = require("express");
 const { ethers } = require("ethers");
 const { requireAuth } = require("../middleware/requireAuth");
-const { getEligibilityContract } = require("../services/web3");
+const { getEligibilityContract, ROLES } = require("../services/web3");
 
 const router = express.Router();
 
@@ -12,31 +12,45 @@ function requireAdmin(req, res, next) {
   next();
 }
 
-router.post("/verifiers", requireAuth, requireAdmin, async (req, res) => {
-  const { address } = req.body;
+router.post("/officers", requireAuth, requireAdmin, async (req, res) => {
+  const { address, role } = req.body;
   if (!ethers.isAddress(address)) {
     return res.status(400).json({ error: "Valid wallet address required" });
   }
+
+  const roleKey = `${(role || "VRO").toUpperCase()}_ROLE`;
+  const roleHash = ROLES[roleKey];
+  if (!roleHash) {
+    return res.status(400).json({ error: `Invalid role specified: ${role}` });
+  }
+
   try {
     const registry = getEligibilityContract(true);
-    const tx = await registry.addVerifier(address);
+    const tx = await registry.addOfficer(roleHash, address);
     const receipt = await tx.wait();
-    res.json({ txHash: receipt.hash });
+    res.json({ txHash: receipt.hash, role: roleKey, address });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 });
 
-router.delete("/verifiers/:address", requireAuth, requireAdmin, async (req, res) => {
-  const { address } = req.params;
+router.delete("/officers/:role/:address", requireAuth, requireAdmin, async (req, res) => {
+  const { role, address } = req.params;
   if (!ethers.isAddress(address)) {
     return res.status(400).json({ error: "Valid wallet address required" });
   }
+
+  const roleKey = `${role.toUpperCase()}_ROLE`;
+  const roleHash = ROLES[roleKey];
+  if (!roleHash) {
+    return res.status(400).json({ error: `Invalid role specified: ${role}` });
+  }
+
   try {
     const registry = getEligibilityContract(true);
-    const tx = await registry.removeVerifier(address);
+    const tx = await registry.removeOfficer(roleHash, address);
     const receipt = await tx.wait();
-    res.json({ txHash: receipt.hash });
+    res.json({ txHash: receipt.hash, role: roleKey, address });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -65,3 +79,4 @@ router.post("/unpause", requireAuth, requireAdmin, async (req, res) => {
 });
 
 module.exports = router;
+

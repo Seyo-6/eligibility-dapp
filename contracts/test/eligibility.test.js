@@ -1,60 +1,106 @@
 const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
-describe("EligibilityRegistry", function () {
-  let registry, admin, verifier, beneficiary, stranger;
+describe("EligibilityRegistry (Telangana MeeSeva 3-Tier)", function () {
+  let registry, admin, vro, ri, tahsildar, citizen, stranger;
+  const VRO_ROLE = ethers.keccak256(ethers.toUtf8Bytes("VRO_ROLE"));
+  const RI_ROLE = ethers.keccak256(ethers.toUtf8Bytes("RI_ROLE"));
+  const TAHSILDAR_ROLE = ethers.keccak256(ethers.toUtf8Bytes("TAHSILDAR_ROLE"));
 
   beforeEach(async function () {
-    [admin, verifier, beneficiary, stranger] = await ethers.getSigners();
+    [admin, vro, ri, tahsildar, citizen, stranger] = await ethers.getSigners();
     const EligibilityRegistry = await ethers.getContractFactory("EligibilityRegistry");
     registry = await EligibilityRegistry.deploy(admin.address);
     await registry.waitForDeployment();
-    await registry.addVerifier(verifier.address);
+
+    // Grant roles
+    await registry.addOfficer(VRO_ROLE, vro.address);
+    await registry.addOfficer(RI_ROLE, ri.address);
+    await registry.addOfficer(TAHSILDAR_ROLE, tahsildar.address);
   });
 
-  it("lets a beneficiary submit a claim", async function () {
-    const docHash = ethers.keccak256(ethers.toUtf8Bytes("ipfs-cid-placeholder"));
-    await expect(registry.connect(beneficiary).submitClaim(docHash, 1))
-      .to.emit(registry, "ClaimSubmitted")
-      .withArgs(beneficiary.address, 1, docHash);
+  it("completes the full 3-tier approval chain: Citizen -> VRO -> RI -> Tahsildar", async function () {
+    const docHash = ethers.keccak256(ethers.toUtf8Bytes("demo-metadata-hash"));
+    const appId = "TS-CGC-2026-0001";
 
-    const claim = await registry.getClaim(beneficiary.address);
-    expect(claim.status).to.equal(1); // Pending
+    // 1. Citizen Submits
+    await expect(registry.connect(citizen).submitApplication(appId, 1, docHash, 0))
+      .to.emit(registry, "ApplicationSubmitted")
+      .withArgs(appId, citizen.address, 1, docHash);
+
+    let app = await registry.getApplication(appId);
+    expect(app.stage).to.equal(1); // Submitted
+    expect(await registry.isCertificateValid(appId)).to.equal(false);
+
+    // 2. VRO Verifies
+    await expect(registry.connect(vro).verifyByVRO(appId, true, "Local field inquiry completed; records verified"))
+      .to.emit(registry, "VROVerified")
+      .withArgs(appId, vro.address, true, "Local field inquiry completed; records verified");
+
+    app = await registry.getApplication(appId);
+    expect(app.stage).to.equal(2); // VRO_Verified
+
+    // 3. RI Endorses
+    await expect(registry.connect(ri).endorseByRI(appId, true, "Survey and revenue records cross-verified"))
+      .to.emit(registry, "RIEndorsed")
+      .withArgs(appId, ri.address, true, "Survey and revenue records cross-verified");
+
+    app = await registry.getApplication(appId);
+    expect(app.stage).to.equal(3); // RI_Endorsed
+
+    // 4. Tahsildar Issues
+    await expect(registry.connect(tahsildar).issueByTahsildar(appId, true, "Digitally signed by Tahsildar"))
+      .to.emit(registry, "CertificateIssued")
+      .withArgs(appId, tahsildar.address, 0, "Digitally signed by Tahsildar");
+
+    app = await registry.getApplication(appId);
+    expect(app.stage).to.equal(4); // Issued
+    expect(await registry.isCertificateValid(appId)).to.equal(true);
+    expect(await registry.isBeneficiaryEligible(citizen.address, 1)).to.equal(true);
   });
 
-  it("lets a verifier approve a pending claim", async function () {
-    const docHash = ethers.keccak256(ethers.toUtf8Bytes("doc"));
-    await registry.connect(beneficiary).submitClaim(docHash, 1);
+  it("handles rejection by VRO", async function () {
+    const docHash = ethers.keccak256(ethers.toUtf8Bytes("demo-doc"));
+    const appId = "TS-INC-2026-0002";
 
-    await expect(registry.connect(verifier).reviewClaim(beneficiary.address, true))
-      .to.emit(registry, "ClaimReviewed")
-      .withArgs(beneficiary.address, verifier.address, true);
+    await registry.connect(citizen).submitApplication(appId, 2, docHash, 0);
 
-    expect(await registry.isEligible(beneficiary.address)).to.equal(true);
+    await expect(registry.connect(vro).verifyByVRO(appId, false, "Applicant not residing in village"))
+      .to.emit(registry, "ApplicationRejected");
+
+    const app = await registry.getApplication(appId);
+    expect(app.stage).to.equal(5); // Rejected
+    expect(await registry.isCertificateValid(appId)).to.equal(false);
   });
 
-  it("rejects review from a non-verifier", async function () {
-    const docHash = ethers.keccak256(ethers.toUtf8Bytes("doc"));
-    await registry.connect(beneficiary).submitClaim(docHash, 1);
+  it("blocks non-officer from acting on applications", async function () {
+    const docHash = ethers.keccak256(ethers.toUtf8Bytes("demo-doc"));
+    const appId = "TS-CGC-2026-0003";
+
+    await registry.connect(citizen).submitApplication(appId, 1, docHash, 0);
 
     await expect(
-      registry.connect(stranger).reviewClaim(beneficiary.address, true)
+      registry.connect(stranger).verifyByVRO(appId, true, "Fraudulent approval")
     ).to.be.reverted;
   });
 
-  it("does not allow reviewing a claim that was never submitted", async function () {
-    await expect(
-      registry.connect(verifier).reviewClaim(stranger.address, true)
-    ).to.be.revertedWith("No pending claim");
-  });
+  it("allows Tahsildar to revoke an issued certificate", async function () {
+    const docHash = ethers.keccak256(ethers.toUtf8Bytes("demo-doc"));
+    const appId = "TS-CGC-2026-0004";
 
-  it("blocks a re-submission once approved", async function () {
-    const docHash = ethers.keccak256(ethers.toUtf8Bytes("doc"));
-    await registry.connect(beneficiary).submitClaim(docHash, 1);
-    await registry.connect(verifier).reviewClaim(beneficiary.address, true);
+    await registry.connect(citizen).submitApplication(appId, 1, docHash, 0);
+    await registry.connect(vro).verifyByVRO(appId, true, "OK");
+    await registry.connect(ri).endorseByRI(appId, true, "OK");
+    await registry.connect(tahsildar).issueByTahsildar(appId, true, "Approved");
 
-    await expect(
-      registry.connect(beneficiary).submitClaim(docHash, 1)
-    ).to.be.revertedWith("Already approved");
+    expect(await registry.isCertificateValid(appId)).to.equal(true);
+
+    // Revocation
+    await expect(registry.connect(tahsildar).revokeCertificate(appId, "Discovered fraudulent lineage records"))
+      .to.emit(registry, "CertificateRevoked")
+      .withArgs(appId, tahsildar.address, "Discovered fraudulent lineage records");
+
+    expect(await registry.isCertificateValid(appId)).to.equal(false);
+    expect(await registry.isBeneficiaryEligible(citizen.address, 1)).to.equal(false);
   });
 });

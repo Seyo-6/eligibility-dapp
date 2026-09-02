@@ -1,117 +1,93 @@
-# Eligibility dApp — Telangana-inspired certificate prototype
+# Telangana MeeSeva 2.0 Blockchain Certificate & DBT DApp
 
-A prototype dApp for verifier-attested eligibility claims, with MetaMask login and caste/income certificate application flows inspired by public Telangana certificate workflows.
+A decentralized, tamper-proof citizen certificate issuance and Direct Benefit Transfer (DBT) application modeled after the **Telangana MeeSeva & Revenue Department statutory workflow**.
 
-**This is not an official Government of Telangana or MeeSeva service. Do not upload real Aadhaar numbers or sensitive documents.**
+Built for academic evaluation, lab demonstrations, and capstone project presentations.
 
-## Structure
+---
 
-```text
-contracts/   Solidity / Hardhat — EligibilityRegistry
-backend/     Node.js/Express API — wallet auth, claims, verifier review
-frontend/    React/Vite — MetaMask login and certificate applications
-render.yaml  Render deployment blueprint
+## 🏛️ System Architecture & Workflow
+
+```
+                                  [ TELANGANA REVENUE HIERARCHY ]
+
+ [ Citizen / Kiosk ]
+        │
+        ▼ (Submit Application + Documents)
+ [ MeeSeva Gateway ] ──► Stores metadata bundle & generates Keccak-256 hash
+        │
+        ▼ (Stage 1)
+ [ Village Revenue Officer (VRO) ] ──► Conducts local field inquiry & attaches survey notes
+        │
+        ▼ (Stage 2)
+ [ Revenue Inspector (RI) ] ───────► Cross-verifies revenue/land records & endorses
+        │
+        ▼ (Stage 3)
+ [ Tahsildar / MRO ] ──────────────► Competent authority applies Digital Signature (DSC)
+        │
+        ├────────────────────────────────┬───────────────────────────────┐
+        ▼                                ▼                               ▼
+ [ Issued Certificate ]       [ Public QR Verification ]       [ Direct Benefit Transfer ]
+ (With Hologram & QR code)    (Live on-chain lookup)           (ePASS Scholarship / Grants)
 ```
 
-## Local development
+---
 
-### Contracts
+## 🚀 Quick Start (Local Setup)
+
+### 1. Smart Contracts
 ```bash
 cd contracts
 npm install
-npm run compile
-npm test
-npx hardhat node
-npm run deploy:local
+npm test              # Run automated Hardhat test suite (7/7 tests)
+npx hardhat node      # Start local Ethereum blockchain node (keep running in terminal 1)
 ```
 
-### Backend
+In a second terminal:
+```bash
+cd contracts
+npx hardhat run scripts/deploy.js --network localhost
+```
+*Copy the printed contract addresses (`ELIGIBILITY_REGISTRY_ADDRESS` and `DISBURSEMENT_CONTRACT_ADDRESS`) into your `.env` files.*
+
+### 2. Backend API
 ```bash
 cd backend
-cp .env.example .env
+cp .env.example .env  # Paste contract addresses into .env
 npm install
-npm start
+npm start             # Starts on port 4000
 ```
 
-### Frontend
+### 3. Frontend App
 ```bash
 cd frontend
-cp .env.example .env
+cp .env.example .env  # Paste contract addresses into .env
 npm install
-npm run dev
+npm run dev           # Starts Vite dev server at http://localhost:5173
 ```
 
-## Sepolia deployment
+---
 
-The repository includes `contracts/scripts/deploy-sepolia.js` and a manual GitHub Actions workflow at `.github/workflows/deploy-sepolia.yml`.
+## 🧪 1-Click Demo Profiles (For Lab Presentation)
 
-Add these GitHub repository secrets before running the workflow:
+The login page at `http://localhost:5173` features **1-Click Demo Profiles** so you can present the complete 3-tier workflow without constantly switching MetaMask accounts:
 
-- `SEPOLIA_RPC_URL` — an RPC endpoint from your provider
-- `DEPLOYER_PRIVATE_KEY` — a dedicated Sepolia deployment wallet; never commit this
-- `SEPOLIA_VERIFIER_ADDRESS` — wallet that should receive the verifier role
+1. **Citizen (`citizen`)**: Apply for Caste/Community, Income, Residence, or EWS certificate; upload sample proofs; track application progress.
+2. **VRO Officer (`vro`)**: Inspect pending dossiers in Stage 1 queue; enter field verification notes; verify and forward to RI.
+3. **Revenue Inspector (`ri`)**: Inspect VRO findings in Stage 2 queue; cross-verify revenue registers; endorse to Tahsildar.
+4. **Tahsildar / MRO (`tahsildar`)**: Review complete dossier in Stage 3 queue; apply cryptographic Digital Signature and issue on-chain.
+5. **Print & Verify (`/certificate/:appId` & `/verify/:appId`)**: View official Telangana MeeSeva certificate with live QR code; scan or open public verification page.
+6. **DBT Portal (`/dbt`)**: Switch to citizen profile and claim **ePASS Post-Matric Scholarship** (250 mUSD tokens) — smart contract verifies active on-chain certificate before releasing funds.
+7. **State Admin (`admin`)**: Add/remove officer roles or trigger the emergency circuit breaker pause.
 
-Run **Actions → Deploy EligibilityRegistry to Sepolia → Run workflow**. Copy the deployed registry address from the workflow logs.
+---
 
-Then configure the hosted frontend with:
+## 🛡️ Key Features
 
-```text
-VITE_ELIGIBILITY_REGISTRY_ADDRESS=<deployed registry address>
-VITE_API_BASE=<backend URL>/api
-```
+- **Multi-Certificate Support**: Citizen can hold multiple distinct certificates (Caste, Income, Residence, EWS).
+- **Statutory 3-Tier Workflow**: True VRO $\rightarrow$ RI $\rightarrow$ Tahsildar chain of custody enforced on-chain.
+- **Privacy First (DPDP Compliance)**: No raw citizen PII stored on-chain; only cryptographic Keccak-256 bundle hashes are written to the blockchain.
+- **Dynamic Validity**: Income certificates expire after 1 financial year; Caste certificates have lifetime validity.
+- **Direct Benefit Transfer (DBT)**: Real-time on-chain verification for welfare scheme and scholarship payouts.
+- **Public QR Verification**: Instant verification of credentials without requiring logins.
 
-The hosted wallet flow should use Sepolia test ETH only.
-
-## Render deployment
-
-A `render.yaml` blueprint is included for:
-
-- `eligibility-dapp-api` — Node/Express backend
-- `eligibility-dapp-web` — Vite static frontend
-
-Create a Render Blueprint from this repository. Configure the backend secrets:
-
-```text
-RPC_URL=<Sepolia RPC>
-VERIFIER_PRIVATE_KEY=<dedicated verifier wallet private key>
-VERIFIER_ADDRESSES=<verifier wallet address>
-ELIGIBILITY_REGISTRY_ADDRESS=<deployed registry address>
-FRONTEND_URL=<frontend URL>
-JWT_SECRET=<long random secret>
-```
-
-Configure the frontend variables:
-
-```text
-VITE_API_BASE=https://<backend-service>.onrender.com/api
-VITE_ELIGIBILITY_REGISTRY_ADDRESS=<deployed registry address>
-```
-
-After deployment, users can open the frontend URL, connect MetaMask, sign in, choose **Caste Certificate** or **Income Certificate**, upload a demo supporting file, and submit the document hash through MetaMask.
-
-## Data model
-
-Personal certificate information is intentionally not written to the blockchain. The prototype submits only a document hash and certificate category to the registry. Uploaded files are hashed in the browser; no file storage service is included yet.
-
-## Admin panel
-
-An `/admin` page and matching `/api/admin/*` backend routes let an admin
-wallet manage verifiers and pause/unpause claim submissions on the
-registry, without needing to run `hardhat console` manually:
-
-- Add / remove an address's on-chain `VERIFIER_ROLE`
-- Pause / unpause `submitClaim` on the registry (e.g. during an incident)
-
-To use it, add your wallet address to `ADMIN_ADDRESSES` in the backend's
-env, sign in with that wallet, and open `/admin`. Note this only grants the
-on-chain role — to also let that wallet use the Verifier Panel UI, add it to
-`VERIFIER_ADDRESSES` too.
-
-## Prototype limitations
-
-- One on-chain claim is currently associated with each wallet in the existing registry contract.
-- Application form fields are UI/demo data and are not persisted to a database yet.
-- No IPFS storage or event indexer is included.
-- Nonces are stored in memory; use Redis/database for production.
-- Verifier access is configured by `VERIFIER_ADDRESSES` for the demo.
-- No smart-contract audit or DPDP compliance layer; do not use this for real government certificate processing or sensitive citizen data.

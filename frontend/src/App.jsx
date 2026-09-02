@@ -1,8 +1,11 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
-import VerifierPanel from "./pages/VerifierPanel";
 import CertificateApplication from "./pages/CertificateApplication";
+import OfficerPortal from "./pages/OfficerPortal";
+import CertificateView from "./pages/CertificateView";
+import PublicVerify from "./pages/PublicVerify";
+import DbtPortal from "./pages/DbtPortal";
 import AdminPanel from "./pages/AdminPanel";
 
 export default function App() {
@@ -12,9 +15,14 @@ export default function App() {
         <Route path="/" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/certificate" element={<CertificateApplication />} />
-        <Route path="/verifier" element={<VerifierPanel />} />
+        <Route path="/officer" element={<OfficerPortal />} />
+        <Route path="/certificate/:appId" element={<CertificateView />} />
+        <Route path="/verify" element={<PublicVerify />} />
+        <Route path="/verify/:appId" element={<PublicVerify />} />
+        <Route path="/dbt" element={<DbtPortal />} />
         <Route path="/admin" element={<AdminPanel />} />
       </Routes>
     </BrowserRouter>
   );
 }
+
