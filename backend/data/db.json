@@ -1,0 +1,39 @@
+{
+  "applications": {
+    "TS-CGC-2026-316670": {
+      "applicationId": "TS-CGC-2026-316670",
+      "beneficiary": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "category": 1,
+      "categoryName": "Caste & Community Certificate",
+      "applicantName": "Moulik Sharma",
+      "fatherName": "Rajesh Sharma",
+      "district": "Hyderabad",
+      "mandal": "Shaikpet",
+      "village": "Tolichowki",
+      "pincode": "500008",
+      "casteGroup": "BC-B",
+      "subCaste": "Padmashali",
+      "annualIncome": "0",
+      "purpose": "General MeeSeva Application",
+      "documentsSummary": [],
+      "createdAt": "2026-09-02T13:53:00.739Z",
+      "documentHash": "0xa26b2346a069658aafb96d7fc212c281003ee6dff0c8be704de6f7f685485881",
+      "validUntil": 0,
+      "documents": [],
+      "stage": 1,
+      "stageName": "Submitted (Pending VRO Field Verification)",
+      "history": [
+        {
+          "stage": 1,
+          "stageName": "Submitted",
+          "officerRole": "CITIZEN",
+          "officerAddress": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+          "remarks": "Application lodged through MeeSeva Citizen Portal",
+          "timestamp": "2026-09-02T13:53:00.741Z"
+        }
+      ],
+      "updatedAt": "2026-09-02T13:53:00.741Z"
+    }
+  },
+  "auditLogs": []
+}

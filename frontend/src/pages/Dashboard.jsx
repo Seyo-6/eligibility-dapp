@@ -61,7 +61,7 @@ export default function Dashboard() {
               Welcome back. Track statutory MeeSeva applications and access verified blockchain credentials.
             </p>
           </div>
-          <div style={{ display: "flex", gap: 12 }}>
+          <div>
             <button
               onClick={() => navigate("/certificate")}
               style={{
@@ -78,82 +78,39 @@ export default function Dashboard() {
             >
               + Apply for New Certificate
             </button>
-            <button
-              onClick={() => navigate("/dbt")}
-              style={{
-                background: "#1d4ed8",
-                color: "#ffffff",
-                border: "none",
-                borderRadius: 8,
-                padding: "10px 18px",
-                fontSize: 14,
-                fontWeight: 700,
-                cursor: "pointer"
-              }}
-            >
-              Claim DBT Scholarships →
-            </button>
           </div>
         </div>
 
-        {/* Available Certificate Services */}
+        {/* Available Certificate Services: Caste and Income */}
         <h2 style={{ fontSize: 18, fontWeight: 700, color: "#374151", marginBottom: 14 }}>
           MeeSeva Certificate Services
         </h2>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))", gap: 16, marginBottom: 32 }}>
-          <div style={{ background: "#ffffff", borderRadius: 10, padding: 20, border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>📜</div>
-            <h3 style={{ margin: "0 0 6px 0", fontSize: 16, fontWeight: 700, color: "#111827" }}>Caste & Community</h3>
-            <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#6b7280", lineHeight: 1.4 }}>
-              SC/ST/BC/OC integrated community and nativity certificate with lifetime validity.
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 32 }}>
+          <div style={{ background: "#ffffff", borderRadius: 10, padding: 22, border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+            <div style={{ fontSize: 30, marginBottom: 8 }}>📜</div>
+            <h3 style={{ margin: "0 0 6px 0", fontSize: 17, fontWeight: 700, color: "#111827" }}>Caste & Community Certificate</h3>
+            <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#6b7280", lineHeight: 1.5 }}>
+              Statutory community, nativity, and date-of-birth certification for SC, ST, BC, and OC groups with permanent lifetime validity on-chain.
             </p>
             <button
               onClick={() => navigate("/certificate?type=caste")}
-              style={{ background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 6, padding: "7px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer", width: "100%" }}
+              style={{ background: "#047857", color: "#ffffff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "100%" }}
             >
-              Apply Online →
+              Apply for Caste Certificate →
             </button>
           </div>
 
-          <div style={{ background: "#ffffff", borderRadius: 10, padding: 20, border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>💰</div>
-            <h3 style={{ margin: "0 0 6px 0", fontSize: 16, fontWeight: 700, color: "#111827" }}>Income Certificate</h3>
-            <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#6b7280", lineHeight: 1.4 }}>
-              Annual income attestation for ePASS fee reimbursement and state welfare eligibility.
+          <div style={{ background: "#ffffff", borderRadius: 10, padding: 22, border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
+            <div style={{ fontSize: 30, marginBottom: 8 }}>💰</div>
+            <h3 style={{ margin: "0 0 6px 0", fontSize: 17, fontWeight: 700, color: "#111827" }}>Income Certificate</h3>
+            <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#6b7280", lineHeight: 1.5 }}>
+              Annual family income verification certificate with 1 Financial Year validity, used for college fee reimbursement, scholarships, and admissions.
             </p>
             <button
               onClick={() => navigate("/certificate?type=income")}
-              style={{ background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 6, padding: "7px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer", width: "100%" }}
+              style={{ background: "#047857", color: "#ffffff", border: "none", borderRadius: 6, padding: "8px 16px", fontSize: 13, fontWeight: 700, cursor: "pointer", width: "100%" }}
             >
-              Apply Online →
-            </button>
-          </div>
-
-          <div style={{ background: "#ffffff", borderRadius: 10, padding: 20, border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>🏡</div>
-            <h3 style={{ margin: "0 0 6px 0", fontSize: 16, fontWeight: 700, color: "#111827" }}>Residence & Nativity</h3>
-            <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#6b7280", lineHeight: 1.4 }}>
-              Telangana continuous domicile certificate for government education and employment quota.
-            </p>
-            <button
-              onClick={() => navigate("/certificate?type=residence")}
-              style={{ background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 6, padding: "7px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer", width: "100%" }}
-            >
-              Apply Online →
-            </button>
-          </div>
-
-          <div style={{ background: "#ffffff", borderRadius: 10, padding: 20, border: "1px solid #e5e7eb", boxShadow: "0 1px 2px rgba(0,0,0,0.04)" }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>🏛️</div>
-            <h3 style={{ margin: "0 0 6px 0", fontSize: 16, fontWeight: 700, color: "#111827" }}>EWS Certificate</h3>
-            <p style={{ margin: "0 0 16px 0", fontSize: 13, color: "#6b7280", lineHeight: 1.4 }}>
-              Economically Weaker Section eligibility certification for 10% central/state quota.
-            </p>
-            <button
-              onClick={() => navigate("/certificate?type=ews")}
-              style={{ background: "#f3f4f6", border: "1px solid #d1d5db", borderRadius: 6, padding: "7px 12px", fontSize: 13, fontWeight: 600, cursor: "pointer", width: "100%" }}
-            >
-              Apply Online →
+              Apply for Income Certificate →
             </button>
           </div>
         </div>

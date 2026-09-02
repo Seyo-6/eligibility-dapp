@@ -65,9 +65,6 @@ export default function Navbar() {
             <Link to="/officer" style={{ textDecoration: "none", color: "#374151", fontWeight: 600, fontSize: 14 }}>
               Officer Portal
             </Link>
-            <Link to="/dbt" style={{ textDecoration: "none", color: "#374151", fontWeight: 600, fontSize: 14 }}>
-              DBT Scholarships
-            </Link>
             <Link to="/verify" style={{ textDecoration: "none", color: "#374151", fontWeight: 600, fontSize: 14 }}>
               QR Verify
             </Link>

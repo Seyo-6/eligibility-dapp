@@ -40,7 +40,7 @@ export default function Login() {
       id: "citizen",
       title: "Citizen / Applicant",
       dept: "Citizen Service Portal",
-      desc: "Apply for Caste/Income certificates, track status, view digitally signed certificates, and claim DBT scholarships.",
+      desc: "Apply for Caste or Income certificates, track 3-stage progress, and view/print your digitally signed certificate with QR code.",
       color: "#1d4ed8",
       bg: "#eff6ff"
     },

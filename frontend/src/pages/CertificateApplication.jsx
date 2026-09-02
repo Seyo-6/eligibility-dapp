@@ -48,9 +48,7 @@ const MANDALS = {
 
 const CERT_TYPES = {
   caste: { id: 1, label: "Caste & Community Certificate", icon: "📜", desc: "For SC, ST, BC, and OC community attestation." },
-  income: { id: 2, label: "Income Certificate", icon: "💰", desc: "Annual household income verification for scholarships & welfare." },
-  residence: { id: 3, label: "Residence & Nativity Certificate", icon: "🏡", desc: "Proof of continuous residence/domicile in Telangana state." },
-  ews: { id: 4, label: "EWS Eligibility Certificate", icon: "🏛️", desc: "Economically Weaker Section certificate for non-reserved categories." }
+  income: { id: 2, label: "Income Certificate", icon: "💰", desc: "Annual household income verification for scholarships & welfare." }
 };
 
 export default function CertificateApplication() {
