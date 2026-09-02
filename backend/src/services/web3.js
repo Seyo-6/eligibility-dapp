@@ -26,18 +26,6 @@ const ELIGIBILITY_ABI = [
   "event CertificateRevoked(string indexed applicationId, address indexed officer, string reason)"
 ];
 
-const DISBURSEMENT_ABI = [
-  "function claimDisbursement(uint256 schemeId) external",
-  "function disburse(address beneficiary, uint256 schemeId) external",
-  "function schemes(uint256) view returns (string name, uint8 requiredCategory, uint256 payoutAmount, uint256 interval, bool active)",
-  "function schemeCount() view returns (uint256)",
-  "function canClaim(address beneficiary, uint256 schemeId) view returns (bool eligible, string memory reason)",
-  "function totalDisbursed(address, uint256) view returns (uint256)",
-  "function lastDisbursement(address, uint256) view returns (uint256)",
-  "function contractBalance() view returns (uint256)",
-  "event Disbursed(address indexed beneficiary, uint256 indexed schemeId, uint256 amount)"
-];
-
 const ROLES = {
   DEFAULT_ADMIN_ROLE: ethers.ZeroHash,
   VRO_ROLE: ethers.keccak256(ethers.toUtf8Bytes("VRO_ROLE")),
@@ -45,28 +33,46 @@ const ROLES = {
   TAHSILDAR_ROLE: ethers.keccak256(ethers.toUtf8Bytes("TAHSILDAR_ROLE"))
 };
 
+// Default Hardhat private keys for lab local demo
+const DEFAULT_KEYS = {
+  admin: "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80",
+  vro: "0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d",
+  ri: "0x5de4111afa1a4b94908f83103eb2f9541082a37856ad7000e2ee2702380f0830",
+  tahsildar: "0x7c852118294e51e653712a81e05800f419141751be58f605c371e15141b007a6"
+};
+
 const provider = new ethers.JsonRpcProvider(process.env.RPC_URL || "http://127.0.0.1:8545");
 
-const signer = process.env.OFFICER_PRIVATE_KEY || process.env.VERIFIER_PRIVATE_KEY
-  ? new ethers.Wallet(process.env.OFFICER_PRIVATE_KEY || process.env.VERIFIER_PRIVATE_KEY, provider)
-  : null;
+function getSigner(role = "admin") {
+  const normalized = (role || "admin").toLowerCase();
+  const envKey = process.env[`${normalized.toUpperCase()}_PRIVATE_KEY`]
+    || process.env.OFFICER_PRIVATE_KEY
+    || process.env.VERIFIER_PRIVATE_KEY
+    || DEFAULT_KEYS[normalized]
+    || DEFAULT_KEYS.admin;
 
-function getEligibilityContract(withSigner = false) {
-  const address = process.env.ELIGIBILITY_REGISTRY_ADDRESS;
-  if (!address) throw new Error("ELIGIBILITY_REGISTRY_ADDRESS not set");
-  return new ethers.Contract(address, ELIGIBILITY_ABI, withSigner ? signer : provider);
+  return new ethers.Wallet(envKey, provider);
 }
 
-function getDisbursementContract(withSigner = false) {
-  const address = process.env.DISBURSEMENT_CONTRACT_ADDRESS;
-  if (!address) throw new Error("DISBURSEMENT_CONTRACT_ADDRESS not set");
-  return new ethers.Contract(address, DISBURSEMENT_ABI, withSigner ? signer : provider);
+function getEligibilityContract(signerOrRole = false) {
+  const address = process.env.ELIGIBILITY_REGISTRY_ADDRESS;
+  if (!address) throw new Error("ELIGIBILITY_REGISTRY_ADDRESS not set in .env");
+
+  let runner = provider;
+  if (signerOrRole === true) {
+    runner = getSigner("admin");
+  } else if (typeof signerOrRole === "string") {
+    runner = getSigner(signerOrRole);
+  } else if (signerOrRole && typeof signerOrRole === "object") {
+    runner = signerOrRole;
+  }
+
+  return new ethers.Contract(address, ELIGIBILITY_ABI, runner);
 }
 
 module.exports = {
   provider,
-  signer,
+  getSigner,
   ROLES,
-  getEligibilityContract,
-  getDisbursementContract
+  getEligibilityContract
 };

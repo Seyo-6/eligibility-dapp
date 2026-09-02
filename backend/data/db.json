@@ -20,8 +20,8 @@
       "documentHash": "0xa26b2346a069658aafb96d7fc212c281003ee6dff0c8be704de6f7f685485881",
       "validUntil": 0,
       "documents": [],
-      "stage": 1,
-      "stageName": "Submitted (Pending VRO Field Verification)",
+      "stage": 4,
+      "stageName": "Approved & Digitally Issued by Tahsildar",
       "history": [
         {
           "stage": 1,
@@ -30,9 +30,36 @@
           "officerAddress": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
           "remarks": "Application lodged through MeeSeva Citizen Portal",
           "timestamp": "2026-09-02T13:53:00.741Z"
+        },
+        {
+          "stage": 2,
+          "stageName": "VRO Verified (Pending RI Endorsement)",
+          "officerRole": "BENEFICIARY",
+          "officerAddress": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+          "remarks": "APPROVE by VRO",
+          "txHash": "0x2968588c009e945ade97f2ef61c04cb2c722a842dc6460875a752a05694f29f2",
+          "timestamp": "2026-09-02T13:57:31.932Z"
+        },
+        {
+          "stage": 3,
+          "stageName": "RI Endorsed (Pending Tahsildar Digital Signature)",
+          "officerRole": "BENEFICIARY",
+          "officerAddress": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+          "remarks": "APPROVE by RI",
+          "txHash": "0x863f808e7676322b475d03600ba3f3127b75f9853e724f858b15a60b173e0015",
+          "timestamp": "2026-09-02T13:57:35.997Z"
+        },
+        {
+          "stage": 4,
+          "stageName": "Approved & Digitally Issued by Tahsildar",
+          "officerRole": "BENEFICIARY",
+          "officerAddress": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+          "remarks": "APPROVE by TAHSILDAR",
+          "txHash": "0x52c2e8ac290e4933b286db91e2b749d4dd0f5afd3fcfa4b3343fc5a29b7b8e33",
+          "timestamp": "2026-09-02T13:57:40.045Z"
         }
       ],
-      "updatedAt": "2026-09-02T13:53:00.741Z"
+      "updatedAt": "2026-09-02T13:57:40.045Z"
     }
   },
   "auditLogs": []
