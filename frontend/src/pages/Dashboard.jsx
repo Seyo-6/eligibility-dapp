@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import { getSession, authedFetch } from "../services/wallet";
 import Navbar from "../components/Navbar";
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4001/api";
+
 const STAGE_CONFIG = {
   1: { label: "1/3: VRO Field Verification", color: "#d97706", bg: "#fef3c7" },
   2: { label: "2/3: RI Scrutiny", color: "#c2410c", bg: "#ffedd5" },
@@ -18,6 +20,9 @@ export default function Dashboard() {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [selectedTimelineApp, setSelectedTimelineApp] = useState(null);
+  const [fastTracking, setFastTracking] = useState(false);
+  const [fastTrackStatus, setFastTrackStatus] = useState("");
 
   useEffect(() => {
     if (!session) {
@@ -44,6 +49,90 @@ export default function Dashboard() {
     }
   }
 
+  // 1-Click Fast-Track Demo Pipeline for quick lab evaluation
+  async function handleFastTrackDemo(categoryNum = 1) {
+    try {
+      setFastTracking(true);
+      setError(null);
+      setFastTrackStatus("1/4: Lodging application at MeeSeva Kiosk...");
+
+      // 1. Citizen lodges
+      const applyRes = await authedFetch("/applications/apply", {
+        method: "POST",
+        body: JSON.stringify({
+          category: categoryNum,
+          applicantName: categoryNum === 1 ? "K. Sai Praneeth" : "Anitha Reddy",
+          fatherName: categoryNum === 1 ? "K. Satyanarayana" : "A. Mohan Reddy",
+          district: "Warangal",
+          mandal: "Hanamkonda",
+          village: "Madikonda",
+          pincode: "506001",
+          casteGroup: categoryNum === 1 ? "BC-B" : undefined,
+          subCaste: categoryNum === 1 ? "Padmashali" : undefined,
+          annualIncome: categoryNum === 2 ? "75000" : undefined,
+          purpose: categoryNum === 2 ? "College Fee Reimbursement / ePASS" : undefined
+        })
+      });
+
+      if (!applyRes.ok) throw new Error("Failed to lodge demo application");
+      const appData = await applyRes.json();
+      const appId = appData.applicationId;
+
+      // 2. VRO verifies
+      setFastTrackStatus("2/4: VRO completing field verification...");
+      const vroRes = await fetch(`${API_BASE}/auth/demo-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "vro" })
+      });
+      const { token: vroToken } = await vroRes.json();
+
+      await fetch(`${API_BASE}/applications/${appId}/review`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${vroToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve", remarks: "Field inquiry completed; applicant is genuine resident" })
+      });
+
+      // 3. RI endorses
+      setFastTrackStatus("3/4: RI cross-verifying revenue registers...");
+      const riRes = await fetch(`${API_BASE}/auth/demo-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "ri" })
+      });
+      const { token: riToken } = await riRes.json();
+
+      await fetch(`${API_BASE}/applications/${appId}/review`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${riToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve", remarks: "Revenue books and genealogy confirmed" })
+      });
+
+      // 4. Tahsildar issues
+      setFastTrackStatus("4/4: Tahsildar applying Digital Signature (DSC) & On-Chain Issuance...");
+      const tahRes = await fetch(`${API_BASE}/auth/demo-login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: "tahsildar" })
+      });
+      const { token: tahToken } = await tahRes.json();
+
+      await fetch(`${API_BASE}/applications/${appId}/review`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${tahToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "approve", remarks: "Approved and digitally signed by Tahsildar / MRO" })
+      });
+
+      setFastTrackStatus(`✓ Application ${appId} successfully fast-tracked to Issued!`);
+      await loadApplications();
+    } catch (err) {
+      setError(err.message);
+      setFastTrackStatus("");
+    } finally {
+      setFastTracking(false);
+    }
+  }
+
   if (!session) return null;
 
   return (
@@ -52,16 +141,50 @@ export default function Dashboard() {
 
       <main style={{ maxWidth: 1100, margin: "32px auto", padding: "0 20px" }}>
         {/* Welcome & Quick Apply Header */}
-        <div style={{ background: "#ffffff", borderRadius: 12, padding: 24, boxShadow: "0 1px 3px rgba(0,0,0,0.05)", border: "1px solid #e5e7eb", marginBottom: 28, display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 16 }}>
+        <div style={{
+          background: "#ffffff",
+          borderRadius: 12,
+          padding: 24,
+          boxShadow: "0 1px 3px rgba(0,0,0,0.05)",
+          border: "1px solid #e5e7eb",
+          marginBottom: 24,
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          flexWrap: "wrap",
+          gap: 16
+        }}>
           <div>
-            <h1 style={{ margin: 0, fontSize: 24, fontWeight: 800, color: "#111827" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: "#047857", letterSpacing: 0.5, textTransform: "uppercase" }}>
+              Government of Telangana • MeeSeva 2.0
+            </span>
+            <h1 style={{ margin: "2px 0 0 0", fontSize: 24, fontWeight: 800, color: "#111827" }}>
               Citizen Services Dashboard
             </h1>
-            <p style={{ margin: "6px 0 0 0", color: "#6b7280", fontSize: 14 }}>
-              Welcome back. Track statutory MeeSeva applications and access verified blockchain credentials.
+            <p style={{ margin: "4px 0 0 0", color: "#6b7280", fontSize: 14 }}>
+              Track statutory 3-tier certificate progress and access blockchain-verified credentials.
             </p>
           </div>
-          <div>
+
+          <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+            {/* 1-Click Fast Track Button */}
+            <button
+              onClick={() => handleFastTrackDemo(1)}
+              disabled={fastTracking}
+              style={{
+                background: "#f0fdf4",
+                color: "#166534",
+                border: "1px solid #86efac",
+                borderRadius: 8,
+                padding: "9px 14px",
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: fastTracking ? "not-allowed" : "pointer"
+              }}
+            >
+              {fastTracking ? "Processing Pipeline..." : "⚡ Fast-Track Demo Application"}
+            </button>
+
             <button
               onClick={() => navigate("/certificate")}
               style={{
@@ -80,6 +203,21 @@ export default function Dashboard() {
             </button>
           </div>
         </div>
+
+        {fastTrackStatus && (
+          <div style={{
+            background: "#ecfdf5",
+            border: "1px solid #10b981",
+            borderRadius: 8,
+            padding: "10px 16px",
+            color: "#065f46",
+            fontSize: 13,
+            fontWeight: 600,
+            marginBottom: 20
+          }}>
+            {fastTrackStatus}
+          </div>
+        )}
 
         {/* Available Certificate Services: Caste and Income */}
         <h2 style={{ fontSize: 18, fontWeight: 700, color: "#374151", marginBottom: 14 }}>
@@ -209,7 +347,24 @@ export default function Dashboard() {
                         Submitted on: {new Date(app.createdAt).toLocaleDateString()} • Doc Hash: <span style={{ fontFamily: "monospace" }}>{(app.documentHash || "").slice(0, 10)}...</span>
                       </div>
 
-                      <div style={{ display: "flex", gap: 10 }}>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        {/* Audit Timeline Button */}
+                        <button
+                          onClick={() => setSelectedTimelineApp(app)}
+                          style={{
+                            background: "#f1f5f9",
+                            color: "#334155",
+                            border: "1px solid #cbd5e1",
+                            borderRadius: 6,
+                            padding: "6px 12px",
+                            fontSize: 12.5,
+                            fontWeight: 600,
+                            cursor: "pointer"
+                          }}
+                        >
+                          ⏱️ View Statutory Timeline
+                        </button>
+
                         {app.stage === 4 ? (
                           <>
                             <button
@@ -225,7 +380,7 @@ export default function Dashboard() {
                                 cursor: "pointer"
                               }}
                             >
-                              📄 View & Download Certificate
+                              📄 View Certificate
                             </button>
                             <button
                               onClick={() => navigate(`/verify/${app.applicationId}`)}
@@ -244,8 +399,8 @@ export default function Dashboard() {
                             </button>
                           </>
                         ) : (
-                          <span style={{ fontSize: 13, color: "#6b7280", fontStyle: "italic" }}>
-                            Under official statutory processing
+                          <span style={{ fontSize: 12, color: "#d97706", fontWeight: 600 }}>
+                            ● Processing with Revenue Dept
                           </span>
                         )}
                       </div>
@@ -256,8 +411,183 @@ export default function Dashboard() {
             </div>
           )}
         </div>
+
+        {/* Visual Audit Timeline Modal */}
+        {selectedTimelineApp && (
+          <div style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: "rgba(0, 0, 0, 0.5)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 100,
+            padding: 20
+          }}>
+            <div style={{
+              background: "#ffffff",
+              borderRadius: 12,
+              padding: 24,
+              maxWidth: 600,
+              width: "100%",
+              maxHeight: "90vh",
+              overflowY: "auto",
+              boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)"
+            }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16, borderBottom: "1px solid #e5e7eb", paddingBottom: 12 }}>
+                <div>
+                  <span style={{ fontFamily: "monospace", fontSize: 13, fontWeight: 700, background: "#dbeafe", color: "#1e3a8a", padding: "2px 6px", borderRadius: 4 }}>
+                    {selectedTimelineApp.applicationId}
+                  </span>
+                  <h3 style={{ margin: "4px 0 0 0", fontSize: 18, fontWeight: 800, color: "#111827" }}>
+                    Statutory Revenue Chain of Custody
+                  </h3>
+                  <div style={{ fontSize: 12, color: "#64748b" }}>
+                    Applicant: {selectedTimelineApp.applicantName} • {selectedTimelineApp.categoryName}
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setSelectedTimelineApp(null)}
+                  style={{ background: "none", border: "none", fontSize: 20, cursor: "pointer", color: "#9ca3af" }}
+                >
+                  ✕
+                </button>
+              </div>
+
+              {/* Steps Progression */}
+              <div style={{ display: "flex", flexDirection: "column", gap: 16, padding: "8px 0" }}>
+
+                {/* Step 1: Citizen */}
+                <div style={{ display: "flex", gap: 14 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <div style={{ width: 32, height: 32, borderRadius: "50%", background: "#10b981", color: "#fff", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: "bold" }}>
+                      ✓
+                    </div>
+                    <div style={{ width: 2, height: 40, background: "#cbd5e1", marginTop: 4 }}></div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>1. Application Lodgement (Citizen / Kiosk)</div>
+                    <div style={{ fontSize: 12, color: "#64748b" }}>Date: {new Date(selectedTimelineApp.createdAt).toLocaleString()}</div>
+                    <div style={{ fontSize: 11, fontFamily: "monospace", color: "#475569", marginTop: 2 }}>
+                      Bundle Root: {(selectedTimelineApp.documentHash || "").slice(0, 20)}...
+                    </div>
+                  </div>
+                </div>
+
+                {/* Step 2: VRO */}
+                <div style={{ display: "flex", gap: 14 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <div style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: selectedTimelineApp.stage >= 2 ? "#10b981" : "#f59e0b",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold"
+                    }}>
+                      {selectedTimelineApp.stage >= 2 ? "✓" : "2"}
+                    </div>
+                    <div style={{ width: 2, height: 40, background: "#cbd5e1", marginTop: 4 }}></div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
+                      2. Stage 1: Village Revenue Officer (VRO) Field Inquiry
+                    </div>
+                    <div style={{ fontSize: 12, color: selectedTimelineApp.stage >= 2 ? "#047857" : "#d97706", fontWeight: 600 }}>
+                      {selectedTimelineApp.stage >= 2 ? "Field Inspection Completed & Verified" : "Pending Village Inquiry"}
+                    </div>
+                    {selectedTimelineApp.history?.find(h => h.stage === 2) && (
+                      <div style={{ fontSize: 12, color: "#334155", background: "#f8fafc", padding: "6px 10px", borderRadius: 4, marginTop: 4 }}>
+                        "{selectedTimelineApp.history.find(h => h.stage === 2).remarks}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Step 3: RI */}
+                <div style={{ display: "flex", gap: 14 }}>
+                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                    <div style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: "50%",
+                      background: selectedTimelineApp.stage >= 3 ? "#10b981" : "#f59e0b",
+                      color: "#fff",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: "bold"
+                    }}>
+                      {selectedTimelineApp.stage >= 3 ? "✓" : "3"}
+                    </div>
+                    <div style={{ width: 2, height: 40, background: "#cbd5e1", marginTop: 4 }}></div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
+                      3. Stage 2: Revenue Inspector (RI) Scrutiny
+                    </div>
+                    <div style={{ fontSize: 12, color: selectedTimelineApp.stage >= 3 ? "#047857" : "#d97706", fontWeight: 600 }}>
+                      {selectedTimelineApp.stage >= 3 ? "Revenue Registers & Survey Records Endorsed" : "Pending RI Scrutiny"}
+                    </div>
+                    {selectedTimelineApp.history?.find(h => h.stage === 3) && (
+                      <div style={{ fontSize: 12, color: "#334155", background: "#f8fafc", padding: "6px 10px", borderRadius: 4, marginTop: 4 }}>
+                        "{selectedTimelineApp.history.find(h => h.stage === 3).remarks}"
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Step 4: Tahsildar */}
+                <div style={{ display: "flex", gap: 14 }}>
+                  <div style={{
+                    width: 32,
+                    height: 32,
+                    borderRadius: "50%",
+                    background: selectedTimelineApp.stage === 4 ? "#10b981" : "#e2e8f0",
+                    color: selectedTimelineApp.stage === 4 ? "#fff" : "#94a3b8",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontWeight: "bold"
+                  }}>
+                    {selectedTimelineApp.stage === 4 ? "✓" : "4"}
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: "#111827" }}>
+                      4. Stage 3: Tahsildar / MRO Digital Signature & Issuance
+                    </div>
+                    <div style={{ fontSize: 12, color: selectedTimelineApp.stage === 4 ? "#047857" : "#64748b", fontWeight: 600 }}>
+                      {selectedTimelineApp.stage === 4 ? "Approved & Digitally Issued on Blockchain" : "Awaiting Tahsildar Approval"}
+                    </div>
+                    {selectedTimelineApp.stage === 4 && (
+                      <div style={{ fontSize: 11, fontFamily: "monospace", color: "#047857", marginTop: 4 }}>
+                        DSC Certified Signer: {(selectedTimelineApp.tahsildar || "0x90F7...07a6").slice(0, 16)}...
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+              </div>
+
+              <div style={{ textAlign: "right", marginTop: 18, borderTop: "1px solid #e5e7eb", paddingTop: 12 }}>
+                <button
+                  onClick={() => setSelectedTimelineApp(null)}
+                  style={{ background: "#047857", color: "#fff", border: "none", padding: "8px 18px", borderRadius: 6, fontWeight: 700, cursor: "pointer" }}
+                >
+                  Close Timeline
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </main>
     </div>
   );
 }
-
