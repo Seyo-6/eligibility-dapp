@@ -1,8 +1,7 @@
 import { BrowserProvider, Contract, ethers } from "ethers";
 
-const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4000/api";
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:4001/api";
 const REGISTRY_ADDRESS = import.meta.env.VITE_ELIGIBILITY_REGISTRY_ADDRESS;
-const DISBURSEMENT_ADDRESS = import.meta.env.VITE_DISBURSEMENT_CONTRACT_ADDRESS;
 
 export const ELIGIBILITY_ABI = [
   "function submitApplication(string calldata applicationId, uint8 category, bytes32 documentHash, uint256 validUntil) external",
@@ -20,17 +19,6 @@ export const ELIGIBILITY_ABI = [
   "function removeOfficer(bytes32 role, address officer) external",
   "function pause() external",
   "function unpause() external"
-];
-
-export const DISBURSEMENT_ABI = [
-  "function claimDisbursement(uint256 schemeId) external",
-  "function disburse(address beneficiary, uint256 schemeId) external",
-  "function schemes(uint256) view returns (string name, uint8 requiredCategory, uint256 payoutAmount, uint256 interval, bool active)",
-  "function schemeCount() view returns (uint256)",
-  "function canClaim(address beneficiary, uint256 schemeId) view returns (bool eligible, string memory reason)",
-  "function totalDisbursed(address, uint256) view returns (uint256)",
-  "function lastDisbursement(address, uint256) view returns (uint256)",
-  "function contractBalance() view returns (uint256)"
 ];
 
 export async function connectWallet() {
@@ -166,22 +154,6 @@ export async function issueByTahsildarOnChain(applicationId, approve, remarks) {
       return receipt.hash;
     } catch (e) {
       console.warn("Tahsildar on-chain action notice:", e.message);
-    }
-  }
-  return "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");
-}
-
-export async function claimDbtOnChain(schemeId) {
-  if (window.ethereum && DISBURSEMENT_ADDRESS) {
-    try {
-      const { signer } = await connectWallet();
-      const disbursement = new Contract(DISBURSEMENT_ADDRESS, DISBURSEMENT_ABI, signer);
-      const tx = await disbursement.claimDisbursement(schemeId);
-      const receipt = await tx.wait();
-      return receipt.hash;
-    } catch (e) {
-      console.warn("DBT on-chain claim notice:", e.message);
-      throw e;
     }
   }
   return "0x" + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join("");

@@ -1,23 +1,19 @@
 const express = require("express");
 const { ethers } = require("ethers");
 const { requireAuth } = require("../middleware/requireAuth");
-const { getEligibilityContract, getDisbursementContract } = require("../services/web3");
+const { getEligibilityContract } = require("../services/web3");
 const store = require("../services/store");
 
 const router = express.Router();
 
 const CATEGORY_CODES = {
   1: "CGC", // Caste / Community / Nativity / DOB
-  2: "INC", // Income Certificate
-  3: "RES", // Residence Certificate
-  4: "EWS"  // Economically Weaker Section
+  2: "INC"  // Income Certificate
 };
 
 const CATEGORY_NAMES = {
   1: "Caste & Community Certificate",
-  2: "Income Certificate",
-  3: "Residence Certificate",
-  4: "EWS Certificate"
+  2: "Income Certificate"
 };
 
 // Citizen submits a new application draft & gets on-chain hash bundle
@@ -43,6 +39,9 @@ router.post("/apply", requireAuth, async (req, res) => {
     } = req.body;
 
     const catNum = Number(category) || 1;
+    if (catNum !== 1 && catNum !== 2) {
+      return res.status(400).json({ error: "Only Caste (1) and Income (2) certificates are supported" });
+    }
     if (!applicantName || !district || !mandal) {
       return res.status(400).json({ error: "Applicant name, district, and mandal are required" });
     }
@@ -253,35 +252,6 @@ router.get("/public/verify/:appId", async (req, res) => {
       documentHash: app.documentHash,
       onChainData
     });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-});
-
-// Public schemes endpoint for DBT
-router.get("/public/schemes", async (req, res) => {
-  try {
-    const schemes = [
-      {
-        id: 1,
-        name: "Telangana ePASS Post-Matric Scholarship",
-        description: "Financial assistance for higher education tuition and maintenance fees for SC/ST/BC/EWS students.",
-        requiredCategory: 1,
-        categoryName: "Caste / Community Certificate",
-        amount: "250 mUSD",
-        intervalDays: 30
-      },
-      {
-        id: 2,
-        name: "Telangana Welfare & Livelihood Grant",
-        description: "Direct livelihood and agricultural support for families below poverty line.",
-        requiredCategory: 2,
-        categoryName: "Income Certificate (Valid within 1 FY)",
-        amount: "500 mUSD",
-        intervalDays: 60
-      }
-    ];
-    res.json(schemes);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

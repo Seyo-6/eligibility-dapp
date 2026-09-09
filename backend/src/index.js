@@ -3,9 +3,7 @@ const cors = require("cors");
 require("dotenv").config();
 
 const authRoutes = require("./routes/auth");
-const claimsRoutes = require("./routes/claims");
 const applicationsRoutes = require("./routes/applications");
-const kycRoutes = require("./routes/kyc");
 const adminRoutes = require("./routes/admin");
 
 const app = express();
@@ -15,8 +13,6 @@ app.use(express.json({ limit: "10mb" }));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/applications", applicationsRoutes);
-app.use("/api/claims", claimsRoutes);
-app.use("/api/kyc", kycRoutes);
 app.use("/api/admin", adminRoutes);
 
 app.get("/health", (req, res) => res.json({ ok: true, timestamp: new Date().toISOString() }));

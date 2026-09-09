@@ -60,6 +60,136 @@
         }
       ],
       "updatedAt": "2026-09-02T13:57:40.045Z"
+    },
+    "TS-CGC-2026-199981": {
+      "applicationId": "TS-CGC-2026-199981",
+      "beneficiary": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "category": 1,
+      "categoryName": "Caste & Community Certificate",
+      "applicantName": "Ramesh Goud",
+      "fatherName": "Bheemaiah Goud",
+      "district": "Warangal",
+      "mandal": "Hanamkonda",
+      "village": "Madikonda",
+      "pincode": "506001",
+      "casteGroup": "BC-B",
+      "subCaste": "Goud",
+      "annualIncome": "0",
+      "purpose": "General MeeSeva Application",
+      "documentsSummary": [],
+      "createdAt": "2026-09-09T15:25:01.567Z",
+      "documentHash": "0xe3813fa3eb3bd94abac80c2aefbde55c6202719fbed92b0f86cb26ad3554af51",
+      "validUntil": 0,
+      "documents": [],
+      "stage": 4,
+      "stageName": "Approved & Digitally Issued by Tahsildar",
+      "history": [
+        {
+          "stage": 1,
+          "stageName": "Submitted",
+          "officerRole": "CITIZEN",
+          "officerAddress": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+          "remarks": "Application lodged through MeeSeva Citizen Portal",
+          "timestamp": "2026-09-09T15:25:01.569Z"
+        },
+        {
+          "stage": 2,
+          "stageName": "VRO Verified (Pending RI Endorsement)",
+          "officerRole": "VRO",
+          "officerAddress": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+          "remarks": "Field inquiry confirms native resident of Madikonda",
+          "txHash": "",
+          "timestamp": "2026-09-09T15:25:01.583Z"
+        },
+        {
+          "stage": 3,
+          "stageName": "RI Endorsed (Pending Tahsildar Digital Signature)",
+          "officerRole": "RI",
+          "officerAddress": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+          "remarks": "Revenue books verify lineage",
+          "txHash": "",
+          "timestamp": "2026-09-09T15:25:01.594Z"
+        },
+        {
+          "stage": 4,
+          "stageName": "Approved & Digitally Issued by Tahsildar",
+          "officerRole": "TAHSILDAR",
+          "officerAddress": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+          "remarks": "Approved & Digitally Signed with DSC",
+          "txHash": "",
+          "timestamp": "2026-09-09T15:25:01.607Z"
+        }
+      ],
+      "updatedAt": "2026-09-09T15:25:01.607Z",
+      "vro": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+      "ri": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "tahsildar": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "issuedAt": "2026-09-09T15:25:01.607Z"
+    },
+    "TS-INC-2026-827089": {
+      "applicationId": "TS-INC-2026-827089",
+      "beneficiary": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "category": 2,
+      "categoryName": "Income Certificate",
+      "applicantName": "Sita Kumari",
+      "fatherName": "Venkat Rao",
+      "district": "Karimnagar",
+      "mandal": "Manakondur",
+      "village": "Gundlapalli",
+      "pincode": "505001",
+      "casteGroup": "N/A",
+      "subCaste": "N/A",
+      "annualIncome": "85000",
+      "purpose": "College Scholarship / Fee Reimbursement",
+      "documentsSummary": [],
+      "createdAt": "2026-09-09T15:25:01.702Z",
+      "documentHash": "0xa6b66a2700fecbb198175c737259668e256b795f257326e1a35c309054e26c80",
+      "validUntil": 1820503501,
+      "documents": [],
+      "stage": 4,
+      "stageName": "Approved & Digitally Issued by Tahsildar",
+      "history": [
+        {
+          "stage": 1,
+          "stageName": "Submitted",
+          "officerRole": "CITIZEN",
+          "officerAddress": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+          "remarks": "Application lodged through MeeSeva Citizen Portal",
+          "timestamp": "2026-09-09T15:25:01.702Z"
+        },
+        {
+          "stage": 2,
+          "stageName": "VRO Verified (Pending RI Endorsement)",
+          "officerRole": "VRO",
+          "officerAddress": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+          "remarks": "Agriculture and trade income checked",
+          "txHash": "",
+          "timestamp": "2026-09-09T15:25:01.707Z"
+        },
+        {
+          "stage": 3,
+          "stageName": "RI Endorsed (Pending Tahsildar Digital Signature)",
+          "officerRole": "RI",
+          "officerAddress": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+          "remarks": "Income under threshold",
+          "txHash": "",
+          "timestamp": "2026-09-09T15:25:01.711Z"
+        },
+        {
+          "stage": 4,
+          "stageName": "Approved & Digitally Issued by Tahsildar",
+          "officerRole": "TAHSILDAR",
+          "officerAddress": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+          "remarks": "Approved & Issued for 1 Financial Year",
+          "txHash": "",
+          "timestamp": "2026-09-09T15:25:01.716Z"
+        }
+      ],
+      "updatedAt": "2026-09-09T15:25:01.716Z",
+      "vro": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+      "ri": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "tahsildar": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "issuedAt": "2026-09-09T15:25:01.716Z"
     }
   },
   "auditLogs": []

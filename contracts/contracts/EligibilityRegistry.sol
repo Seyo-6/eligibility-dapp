@@ -14,6 +14,10 @@ contract EligibilityRegistry is AccessControl, Pausable {
     bytes32 public constant RI_ROLE = keccak256("RI_ROLE");
     bytes32 public constant TAHSILDAR_ROLE = keccak256("TAHSILDAR_ROLE");
 
+    // Category 1: Caste & Community Certificate, Category 2: Income Certificate
+    uint8 public constant CATEGORY_CASTE = 1;
+    uint8 public constant CATEGORY_INCOME = 2;
+
     enum Stage {
         None,           // 0
         Submitted,      // 1: Pending VRO Field Verification
@@ -25,9 +29,9 @@ contract EligibilityRegistry is AccessControl, Pausable {
     }
 
     struct Application {
-        string applicationId;   // e.g. "TS-CGC-2026-0001"
+        string applicationId;   // e.g. "TS-CGC-2026-0001" or "TS-INC-2026-0001"
         address beneficiary;    // Citizen wallet address
-        uint8 category;         // 1: Caste, 2: Income, 3: Residence, 4: EWS
+        uint8 category;         // 1: Caste, 2: Income
         bytes32 documentHash;   // Keccak-256 / IPFS hash of application bundle & proofs
         Stage stage;
         uint256 submittedAt;
@@ -85,7 +89,7 @@ contract EligibilityRegistry is AccessControl, Pausable {
     ) external whenNotPaused {
         require(bytes(applicationId).length > 0, "Application ID required");
         require(documentHash != bytes32(0), "Invalid document hash");
-        require(category >= 1 && category <= 4, "Invalid category");
+        require(category == CATEGORY_CASTE || category == CATEGORY_INCOME, "Invalid category: 1=Caste, 2=Income");
         require(applications[applicationId].stage == Stage.None, "Application ID already exists");
 
         Application storage app = applications[applicationId];

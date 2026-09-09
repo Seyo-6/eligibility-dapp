@@ -103,4 +103,40 @@ describe("EligibilityRegistry (Telangana MeeSeva 3-Tier)", function () {
     expect(await registry.isCertificateValid(appId)).to.equal(false);
     expect(await registry.isBeneficiaryEligible(citizen.address, 1)).to.equal(false);
   });
+
+  it("enforces category restriction: only Caste (1) and Income (2) are allowed", async function () {
+    const docHash = ethers.keccak256(ethers.toUtf8Bytes("demo-doc"));
+
+    // Category 1: Caste (Allowed)
+    await expect(registry.connect(citizen).submitApplication("TS-CGC-VAL-1", 1, docHash, 0))
+      .to.emit(registry, "ApplicationSubmitted");
+
+    // Category 2: Income (Allowed)
+    await expect(registry.connect(citizen).submitApplication("TS-INC-VAL-2", 2, docHash, 0))
+      .to.emit(registry, "ApplicationSubmitted");
+
+    // Category 3 (Residence) - Rejected
+    await expect(
+      registry.connect(citizen).submitApplication("TS-RES-VAL-3", 3, docHash, 0)
+    ).to.be.revertedWith("Invalid category: 1=Caste, 2=Income");
+
+    // Category 4 (EWS) - Rejected
+    await expect(
+      registry.connect(citizen).submitApplication("TS-EWS-VAL-4", 4, docHash, 0)
+    ).to.be.revertedWith("Invalid category: 1=Caste, 2=Income");
+  });
+
+  it("handles Income certificate with 1-year validity and expiration check", async function () {
+    const docHash = ethers.keccak256(ethers.toUtf8Bytes("income-records-hash"));
+    const appId = "TS-INC-2026-9999";
+    const oneYearFromNow = Math.floor(Date.now() / 1000) + 365 * 24 * 3600;
+
+    await registry.connect(citizen).submitApplication(appId, 2, docHash, oneYearFromNow);
+    await registry.connect(vro).verifyByVRO(appId, true, "Income physically verified");
+    await registry.connect(ri).endorseByRI(appId, true, "Land & income books tally");
+    await registry.connect(tahsildar).issueByTahsildar(appId, true, "Income Certificate digitally issued");
+
+    expect(await registry.isCertificateValid(appId)).to.equal(true);
+    expect(await registry.isBeneficiaryEligible(citizen.address, 2)).to.equal(true);
+  });
 });
